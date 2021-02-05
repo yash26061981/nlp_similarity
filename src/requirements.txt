@@ -1,0 +1,11 @@
+numpy
+nltk
+flask
+pathlib
+inflect
+word2number
+sklearn
+pronouncing
+Phyme
+Spacy
+pyinflect
