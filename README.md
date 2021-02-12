@@ -6,11 +6,13 @@ nlp similarity of two utterances can be computed by using below two methods:
   from nlpsim_api import *
   
 2. Using offline method:
+
     from nlpsim_main.similarity import GetSimilarity
   
-    sentence_pairs = [['"Anyone can Cook"', '"[text of sound, take it off song, it takes a bit of song, it takes a bit of sound, it takes a bit of salt, takes a bit of song, take a bit of song, it takes a bit of solved, take off song, it takes a lot of song]"',
-                       '"[Anyone can Cook]"','"[It takes a bit of salt, Great Chefs can come from anywhere]"']]
+    sentence_pairs += [["P v narsimharao", "[pv narsimha rao, pvnarsmhra]"]]
+    
     get_similarity = GetSimilarity(threshold=0.4)
+    
     for pair in sentence_pairs:
         if len(pair) == 4:
             match = get_similarity.process(
