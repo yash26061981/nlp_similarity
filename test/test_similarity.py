@@ -86,8 +86,13 @@ if __name__ == '__main__':
     sentence_pairs += [["Honesty", "[best, west]"]]
     sentence_pairs += [["P v narsimharao", "[pv narsimha rao, pvnarsmhra]"]]
     sentence_pairs += [['"Relative pronoun"', '"[pronoun]"', '', '"[Indefinite pronoun, Distributive pronoun, Reflexive pronoun]"']]
-    sentence_pairs = [['"Anyone can Cook"', '"[text of sound, take it off song, it takes a bit of song, it takes a bit of sound, it takes a bit of salt, takes a bit of song, take a bit of song, it takes a bit of solved, take off song, it takes a lot of song]"',
+    sentence_pairs += [['"Anyone can Cook"', '"[text of sound, take it off song, it takes a bit of song, it takes a bit of sound, it takes a bit of salt, takes a bit of song, take a bit of song, it takes a bit of solved, take off song, it takes a lot of song]"',
                        '"[Anyone can Cook]"','"[It takes a bit of salt, Great Chefs can come from anywhere]"']]
+    sentence_pairs += [["If", "[if, iff, gif, iph]"]]
+    sentence_pairs += [["If", '["if", "iff", "gif", "iph"]']]
+    sentence_pairs += [["Although", "[although, all do, Aldo, all du, all 2, I'll do, Alto, ldo, call 2, Isuzu]"]]
+    sentence_pairs = [["Although", "[although, all do, Aldo, all du, all 2, I'll do, Alto, ldo, call 2, Isuzu]",
+                       "[Although]","[Because]"]]
     #    get_similarity = GetSimilarity(threshold=0.4)
     for pair in sentence_pairs:
         if len(pair) == 4:

@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.config["DEBUG"] = False
 
 get_similarity = None
-__degug = False
+
 
 def initialise():
     global get_similarity
@@ -39,10 +39,9 @@ def similarity():
     try:
         start = time.time()
         s1, s2, s3, s4 = get_input_sentences()
-        print(s1,s2,s3,s4) if __degug else None
         match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4)
         end = time.time()
-        if __degug:
+        if get_similarity.config.debug:
             print('s1 = {}'.format(match.actual_answer))
             print('s2 = {}'.format(match.entered_ans))
             print('s3 = {}'.format(match.true_alternatives))

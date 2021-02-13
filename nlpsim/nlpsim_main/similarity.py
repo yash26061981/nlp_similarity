@@ -5,6 +5,7 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
 
+import logging
 from nlpsim_methods.methods import *
 from nlpsim_utils.utilities import *
 from nlpsim_utils.helper import *
@@ -223,13 +224,27 @@ class GetSimilarity:
             s4 = None
         return Input(actual_answer=s1, utterance_answer=s2, correct_ans_variances=s3, other_options=s4, threshold=th)
 
-    def process_args(self, args):
+    def process_args_old(self, args):
         p_args = self.utils.clone(args)
         p_args.actual_answer = self.utils.remove_noise(args.actual_answer)[0]
         p_args.utterance_answer = self.utils.remove_noise(args.utterance_answer, get_list=True)
         p_args.correct_ans_variances = self.utils.remove_noise(args.correct_ans_variances, get_list=True) \
             if args.correct_ans_variances is not None else None
         p_args.other_options = self.utils.remove_noise(args.other_options, get_list=True) \
+            if args.other_options is not None else None
+        return p_args
+
+    def print_input(self, s, args):
+        if self.config.debug:
+            print(s, args.actual_answer, args.utterance_answer, args.correct_ans_variances, args.other_options)
+
+    def process_args(self, args):
+        p_args = self.utils.clone(args)
+        p_args.actual_answer = self.utils.get_list_from_str(args.actual_answer, get_list=True)[0]
+        p_args.utterance_answer = self.utils.get_list_from_str(args.utterance_answer, get_list=True)
+        p_args.correct_ans_variances = self.utils.get_list_from_str(args.correct_ans_variances, get_list=True) \
+            if args.correct_ans_variances is not None else None
+        p_args.other_options = self.utils.get_list_from_str(args.other_options, get_list=True) \
             if args.other_options is not None else None
         return p_args
 
@@ -276,17 +291,32 @@ class GetSimilarity:
         match_result.other_options = args.other_options
         return match_result
 
+    def run_sanity_check(self, args):
+        args.actual_answer = self.utils.run_sanity_check(args.actual_answer, islist=False)
+        args.utterance_answer = self.utils.run_sanity_check(args.utterance_answer)
+        args.correct_ans_variances = self.utils.run_sanity_check(args.correct_ans_variances)
+        args.other_options = self.utils.run_sanity_check(args.other_options)
+        return args
+
     def process(self, **kwargs):
         try:
             raw_args = self.parse_args(**kwargs)
+            self.print_input('from Raw ARgs: ',raw_args)
             if raw_args.actual_answer is None:
                 print('Got ERROR : Actual Answer is {}'.format(raw_args.actual_answer))
             if raw_args.utterance_answer is None:
                 print('Got ERROR : Utterance Answers are {}'.format(raw_args.utterance_answer))
             processed_args = self.process_args(raw_args)
-            nlp_processed_args = self.remove_stopwords_from_args(processed_args)
+            self.print_input('from Processed ARgs: ', processed_args)
+            if self.config.remove_stop_words:
+                nlp_processed_args = self.remove_stopwords_from_args(processed_args)
+            else:
+                nlp_processed_args = processed_args
+            self.print_input('from NLP Processed ARgs: ', nlp_processed_args)
             filtered_args = self.filter_common_words_from_options(nlp_processed_args)
-            args = self.utils.clone(filtered_args)
+            self.print_input('from Filtered ARgs: ', filtered_args)
+            args = self.run_sanity_check(args=self.utils.clone(filtered_args))
+            self.print_input('from Sanity Check ARgs: ', args)
             scores_list, word_list, method_list, similar_list = [], [], [], []
             #print(args.actual_answer, args.utterance_answer, args.correct_ans_variances, args.other_options)
             try:

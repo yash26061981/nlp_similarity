@@ -63,6 +63,28 @@ class Utilities:
                     word2 = word2[0]
         return word2
 
+    def get_list_from_str(self, word, get_list=True):
+        if get_list:
+            at_val = [v.strip().lower() for v in word.lstrip('\[{').rstrip('\]}').split(',')]
+        else:
+            at_val = word.lower()
+        #print(at_val, word)
+        return at_val
+
+    @staticmethod
+    def run_sanity_check(word, islist=True):
+        if islist:
+            check_w = []
+            for w in word:
+                if len(w) > 0:
+                    check_w.append(w)
+            if len(check_w) > 0:
+                return check_w
+            else:
+                return None
+        else:
+            return word if len(word) > 0 else None
+
     @staticmethod
     def get_best_match(score):
         index_max = np.argmax(score)

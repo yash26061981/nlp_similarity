@@ -14,5 +14,7 @@ class Params:
         self.avg_list_overlap_score = 0.4
         self.reject_syn_ant_match = True
         self.reject_word_forms = True
+        self.remove_stop_words = False
+        self.debug = False
         print('Loaded RunTime Parameters')
         pass
