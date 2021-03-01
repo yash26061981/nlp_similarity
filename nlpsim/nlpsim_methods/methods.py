@@ -197,16 +197,26 @@ class Methods:
         oth_opt_token = [self.helper.word_tokenize(oth) for oth in args.other_options]
         ut_token = [self.helper.word_tokenize(ut) for ut in args.utterance_answer]
 
-        oth_opt_dict = [list(self.helper.remove_stop_words(token)) for token in oth_opt_token]
-        ut_dict = [list(self.helper.remove_stop_words(token))for token in ut_token]
+        if self.config.remove_stop_words:
+            oth_opt_dict = [list(self.helper.remove_stop_words(token)) for token in oth_opt_token]
+            ut_dict = [list(self.helper.remove_stop_words(token))for token in ut_token]
+        else:
+            oth_opt_dict = [list(token) for token in oth_opt_token]
+            ut_dict = [list(token) for token in ut_token]
 
         o_set = set(tuple(i) for i in oth_opt_dict)
         u_set = set(tuple(i) for i in ut_dict)
 
         if len(u_set.intersection(o_set)) > 0:
-            return True, 1.0, u_set.intersection(o_set)
-        else:
-            return False, 0.0, None
+            oth_opt_word = [x[0] for x in u_set.intersection(o_set)]
+            rem_utt = [utt for utt in args.utterance_answer if utt not in oth_opt_word]
+            if rem_utt:
+                args.utterance_answer = rem_utt
+                return False, 0.0, None
+            else:
+                return True, 1.0, u_set.intersection(o_set)
+
+        return False, 0.0, None
 
     def check_if_syn_ant_match(self, a_ans, u_ans):
         a_syn, a_ant = self.helper.get_synonyms_antonyms(a_ans)

@@ -73,25 +73,27 @@ class Utilities:
 
     @staticmethod
     def run_sanity_check(word, islist=True):
-        if islist:
-            check_w = []
-            for w in word:
-                if len(w) > 0:
-                    check_w.append(w)
-            if len(check_w) > 0:
-                return check_w
+        if word is not None:
+            if islist:
+                check_w = []
+                for w in word:
+                    if len(w) > 0:
+                        check_w.append(w)
+                if len(check_w) > 0:
+                    return check_w
+                else:
+                    return None
             else:
-                return None
+                return word if len(word) > 0 else None
         else:
-            return word if len(word) > 0 else None
+            return None
 
     @staticmethod
     def get_best_match(score):
         index_max = np.argmax(score)
         return index_max
 
-    @staticmethod
-    def get_common_words_in_options(args):
+    def get_common_words_in_options(self, args):
         actual_ans = args.actual_answer
         other_opt = args.other_options
         act_len = len(actual_ans.split(' '))
@@ -101,11 +103,19 @@ class Utilities:
             common_word = []
             for opt_lst in other_opt_list:
                 common_word.append(list(set(act_list).intersection(opt_lst)))
-            common_word = [item for sublist in common_word for item in sublist]
-            un_w = np.unique(common_word).tolist()
+            common_word_list = [item for sublist in common_word for item in sublist]
+            un_w = self.prune_odd_one_out(common_word_list)
+            #un_w = np.unique(common_word_list).tolist()
             if len(un_w) > 0:
                 return True, un_w
         return False, None
+
+    @staticmethod
+    def prune_odd_one_out(l, count_th=2):
+        nu = np.unique(l)
+        lc = [l.count(x) for x in nu]
+        new_l = [x for i, x in enumerate(nu) if lc[i] > count_th]
+        return new_l
 
     @staticmethod
     def remove_common_words(word1, common_word):

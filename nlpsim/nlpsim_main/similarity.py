@@ -5,11 +5,14 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
 
-import logging
 from nlpsim_methods.methods import *
 from nlpsim_utils.utilities import *
 from nlpsim_utils.helper import *
+from nlpsim_utils.logging import *
 from nlpsim_main.params import *
+
+# nltk.download("stopwords")
+# nltk.download('punkt')
 
 
 class Result:
@@ -45,13 +48,12 @@ class Input:
 
 
 class GetSimilarity:
-    def __init__(self, threshold=0.4):
-        # nltk.download("stopwords")
-        # nltk.download('punkt')
+    def __init__(self, cwd=None, threshold=0.4):
         self.config = Params()
         self.utils = Utilities()
         self.methods = Methods(threshold, self.config)
         self.helper = Helper()
+        self.logger = LogAppStd(cwd)
         #self.rhyming = GetRhymingWords()
         self.threshold = threshold
         self.enable_rhyming = self.config.enable_rhyme
@@ -60,6 +62,7 @@ class GetSimilarity:
         self.use_methods = ['DirectMatch', 'Cosine', 'NumWord', 'SynAnt', 'Partial', 'Rhyme', 'HybridMatch',
                             'WordForm', 'FuzzyMatch', 'OtherOptionsAnswered']
         self.reject_match_methods = ['SynAnt', 'WordForm', 'OtherOptionsAnswered']
+        self.logger.log_info('Loaded RunTime Parameters')
         pass
 
     def use_method(self, args):
@@ -234,9 +237,11 @@ class GetSimilarity:
             if args.other_options is not None else None
         return p_args
 
-    def print_input(self, s, args):
-        if self.config.debug:
-            print(s, args.actual_answer, args.utterance_answer, args.correct_ans_variances, args.other_options)
+    def log_inputs(self, s, args):
+        self.logger.log_debug('{} - Correct Ans: {}'.format(s, args.actual_answer))
+        self.logger.log_debug('{} - Utterances: {}'.format(s, args.utterance_answer))
+        self.logger.log_debug('{} - Correct Ans Variances: {}'.format(s, args.correct_ans_variances))
+        self.logger.log_debug('{} - Other Options: {}'.format(s, args.other_options))
 
     def process_args(self, args):
         p_args = self.utils.clone(args)
@@ -298,27 +303,32 @@ class GetSimilarity:
         args.other_options = self.utils.run_sanity_check(args.other_options)
         return args
 
-    def process(self, **kwargs):
+    def get_similarity(self, **kwargs):
         try:
             raw_args = self.parse_args(**kwargs)
-            self.print_input('from Raw ARgs: ',raw_args)
             if raw_args.actual_answer is None:
-                print('Got ERROR : Actual Answer is {}'.format(raw_args.actual_answer))
+                self.logger.log_error('Correct Answer field can not be Blank or None')
+                return self.populate_payload(raw_args, Result())
             if raw_args.utterance_answer is None:
-                print('Got ERROR : Utterance Answers are {}'.format(raw_args.utterance_answer))
+                self.logger.log_error('Utterance field can not be Blank or None')
+                return self.populate_payload(raw_args, Result())
+
+            # self.log_inputs('Preprocess Step1: Raw ARgs: ', raw_args)
+
             processed_args = self.process_args(raw_args)
-            self.print_input('from Processed ARgs: ', processed_args)
             if self.config.remove_stop_words:
                 nlp_processed_args = self.remove_stopwords_from_args(processed_args)
             else:
                 nlp_processed_args = processed_args
-            self.print_input('from NLP Processed ARgs: ', nlp_processed_args)
+            #self.log_inputs('Preprocess Step2: NLP Processed ARgs: ', nlp_processed_args)
+
             filtered_args = self.filter_common_words_from_options(nlp_processed_args)
-            self.print_input('from Filtered ARgs: ', filtered_args)
+            #self.log_inputs('Preprocess Step3: Filtered ARgs: ', filtered_args)
+
             args = self.run_sanity_check(args=self.utils.clone(filtered_args))
-            self.print_input('from Sanity Check ARgs: ', args)
+            self.log_inputs('Preprocess Step4: Sanity Check ARgs: ', args)
+
             scores_list, word_list, method_list, similar_list = [], [], [], []
-            #print(args.actual_answer, args.utterance_answer, args.correct_ans_variances, args.other_options)
             try:
                 if args.other_options:
                     args.method = 'OtherOptionsAnswered'
@@ -363,17 +373,20 @@ class GetSimilarity:
                                                          match_method=method_list[max_index]))
                 return self.populate_payload(processed_args, Result())
             except ValueError:
-                print('Got Value Error Exception')
-                return self.populate_payload(processed_args, Result())
+                self.logger.log_error('Got Value Error Exception')
+                return self.populate_payload(processed_args, Result(match_method='Value Error Exception'))
             except BaseException as e:
-                print('Got ERROR ' + str(e))
-                return self.populate_payload(processed_args, Result())
+                self.logger.log_error('Got ERROR ' + str(e))
+                return self.populate_payload(processed_args, Result(match_method='Got ERROR ' + str(e)))
             except:
-                print('Got Unknown Exception')
-                return self.populate_payload(processed_args, Result())
+                self.logger.log_error('Got Unknown Exception')
+                return self.populate_payload(processed_args, Result(match_method='Got Unknown Exception'))
         except:
-            print('Got Unknown Exception')
-            return self.populate_payload(Input(), Result())
+            self.logger.log_error('Got Unknown Exception')
+            return self.populate_payload(Input(), Result(match_method='Got Unknown Exception'))
+
+    def process(self, **kwargs):
+        return self.get_similarity(**kwargs)
 
 
 if __name__ == '__main__':

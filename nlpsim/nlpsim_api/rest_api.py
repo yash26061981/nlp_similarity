@@ -18,9 +18,9 @@ app.config["DEBUG"] = False
 get_similarity = None
 
 
-def initialise():
+def initialise(cwd):
     global get_similarity
-    get_similarity = GetSimilarity(threshold=0.4)
+    get_similarity = GetSimilarity(cwd=cwd, threshold=0.4)
     return
 
 
@@ -41,14 +41,6 @@ def similarity():
         s1, s2, s3, s4 = get_input_sentences()
         match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4)
         end = time.time()
-        if get_similarity.config.debug:
-            print('s1 = {}'.format(match.actual_answer))
-            print('s2 = {}'.format(match.entered_ans))
-            print('s3 = {}'.format(match.true_alternatives))
-            print('s4 = {}'.format(match.other_options))
-
-            print("Similar = {0} , with Score = {1:.3f}%, Match Word : '{2}', From Method : '{3}'\n".format(
-                match.is_similar, match.score, match.match_word, match.match_method))
         response = make_response(
             jsonify(
                 {"Correct_Ans": s1.replace('"', ''), "Entered_Ans": s2.replace('"', ''), "Score": match.score,
@@ -63,10 +55,3 @@ def similarity():
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
-
-
-if __name__ == '__main__':
-    print('Calling API')
-    initialise()
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port, debug=False)
