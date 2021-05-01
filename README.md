@@ -6,7 +6,7 @@ nlp similarity of two utterances can be computed by using below two methods:
     
     1.1 First Run the API:
 
-        from nlpsim.nlpsim_api import *
+        from nlpsim_api import *
         
         if __name__ == '__main__':
             print('Calling API')

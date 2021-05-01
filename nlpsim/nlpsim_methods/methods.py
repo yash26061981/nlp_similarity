@@ -201,8 +201,8 @@ class Methods:
             oth_opt_dict = [list(self.helper.remove_stop_words(token)) for token in oth_opt_token]
             ut_dict = [list(self.helper.remove_stop_words(token))for token in ut_token]
         else:
-            oth_opt_dict = [list(token) for token in oth_opt_token]
-            ut_dict = [list(token) for token in ut_token]
+            oth_opt_dict = oth_opt_token
+            ut_dict = ut_token
 
         o_set = set(tuple(i) for i in oth_opt_dict)
         u_set = set(tuple(i) for i in ut_dict)

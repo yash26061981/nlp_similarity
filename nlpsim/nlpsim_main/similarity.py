@@ -2,14 +2,16 @@
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
-sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("..")))
-sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
+
+sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
+sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
 
 from nlpsim_methods.methods import *
 from nlpsim_utils.utilities import *
 from nlpsim_utils.helper import *
 from nlpsim_utils.logging import *
 from nlpsim_main.params import *
+
 
 # nltk.download("stopwords")
 # nltk.download('punkt')
@@ -54,7 +56,7 @@ class GetSimilarity:
         self.methods = Methods(threshold, self.config)
         self.helper = Helper()
         self.logger = LogAppStd(cwd)
-        #self.rhyming = GetRhymingWords()
+        # self.rhyming = GetRhymingWords()
         self.threshold = threshold
         self.enable_rhyming = self.config.enable_rhyme
         self.get_best_match = self.config.get_best_match
@@ -71,23 +73,31 @@ class GetSimilarity:
         if args.method == 'OtherOptionsAnswered':
             is_similar, other_option_match_score, matched_utterance = \
                 self.methods.check_if_other_options_answered(args)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, other_option_match_score, matched_utterance))
             return Result(match_score=other_option_match_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
         if args.method == 'DirectMatch':
             is_similar, dm_score, matched_utterance = \
                 self.methods.is_direct_match(args)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, dm_score, matched_utterance))
             return Result(match_score=dm_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
         elif args.method == 'NumWord':
             is_similar, nw_score, skip_match = self.methods.match_using_numbers_and_words(args)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, nw_score, args.utterance_answer))
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'HybridMatch':
             is_similar, nw_score, match_word, skip_match = self.methods.match_using_hybrid_num_letters(args)
             utt_ans_match = utterance_answer + ' -({})'.format(match_word)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, nw_score, utt_ans_match))
             return Result(match_score=nw_score, match_method=args.method, match_word=utt_ans_match,
                           is_similar=is_similar, skip_match=skip_match)
 
@@ -95,17 +105,23 @@ class GetSimilarity:
             check = self.methods.check_if_syn_ant_match(actual_answer, utterance_answer)
             if check and not self.config.reject_syn_ant_match:
                 check = False
+            self.logger.log_info('Method: {} - isSynAnt: {} - RejectParam: {}'
+                                 .format(args.method, check, self.config.reject_syn_ant_match))
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
         elif args.method == 'WordForm':
             check = self.methods.check_if_word_forms_match(actual_answer, utterance_answer)
             if check and not self.config.reject_word_forms:
                 check = False
+            self.logger.log_info('Method: {} - isWordForm: {} - RejectParam: {}'.
+                                 format(args.method, check, self.config.reject_word_forms))
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
         elif args.method == 'Cosine':
             is_similar, cosine_score = \
                 self.methods.match_using_cosine_similarity(actual_answer, utterance_answer, threshold)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, cosine_score, utterance_answer))
             return Result(match_score=cosine_score, match_method=args.method, is_similar=is_similar,
                           match_word=utterance_answer)
 
@@ -113,26 +129,41 @@ class GetSimilarity:
             is_similar, ov_score, overlap_word = \
                 self.methods.match_using_string_overlap(actual_answer, utterance_answer, threshold)
             utt_ans_overlap = utterance_answer + ' -({})'.format(overlap_word)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, ov_score, overlap_word))
             return Result(match_score=ov_score, match_method=args.method,
                           is_similar=is_similar, match_word=utt_ans_overlap)
 
         elif args.method == 'Rhyme':
             is_similar, rh_score, rhyme_word = \
                 self.methods.match_using_rhyming_words(actual_answer, utterance_answer, threshold, best_match=False)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, rh_score, rhyme_word))
             return Result(match_score=rh_score, match_method=args.method,
                           is_similar=is_similar, match_word=rhyme_word)
 
         elif args.method == 'FuzzyMatch':
             is_similar, fm_score, fm_word = \
                 self.methods.match_using_fuzzy_logic(actual_answer, utterance_answer)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, fm_score, fm_word))
             return Result(match_score=fm_score, match_method=args.method,
                           is_similar=is_similar, match_word=fm_word)
         else:
-            print('Method {} is not supported'.format(args.method))
+            self.logger.log_error('Method {} is not supported'.format(args.method))
         return Result(processed=False)
 
     def find_similarity(self, args):
         score, utt_ans, method = [], [], []
+
+        args.threshold = self.threshold
+        args.method = 'SynAnt'
+        syn_ant_result = self.use_method(args)
+        score.append(syn_ant_result.score), utt_ans.append(syn_ant_result.match_word)
+        method.append(syn_ant_result.match_method)
+        if syn_ant_result.skip_match:
+            return syn_ant_result
+
         args.threshold = self.config.num_word_match_th
         args.method = 'NumWord'
         num_word_result = self.use_method(args)
@@ -147,14 +178,6 @@ class GetSimilarity:
         method.append(hybrid_match_result.match_method)
         if hybrid_match_result.is_similar or hybrid_match_result.skip_match:
             return hybrid_match_result
-
-        args.threshold = self.threshold
-        args.method = 'SynAnt'
-        syn_ant_result = self.use_method(args)
-        score.append(syn_ant_result.score), utt_ans.append(syn_ant_result.match_word)
-        method.append(syn_ant_result.match_method)
-        if syn_ant_result.skip_match:
-            return syn_ant_result
 
         args.threshold = self.threshold
         args.method = 'WordForm'
@@ -207,7 +230,7 @@ class GetSimilarity:
             s1 = s1 if len(s1) > 0 else None
             s2 = s2 if len(s2) > 0 else None
         except:
-            print('Got Input Error Exception')
+            self.logger.log_error('Got Input Error Exception')
             return Input()
 
         if kwargs.get('th') is not None:
@@ -238,10 +261,9 @@ class GetSimilarity:
         return p_args
 
     def log_inputs(self, s, args):
-        self.logger.log_debug('{} - Correct Ans: {}'.format(s, args.actual_answer))
-        self.logger.log_debug('{} - Utterances: {}'.format(s, args.utterance_answer))
-        self.logger.log_debug('{} - Correct Ans Variances: {}'.format(s, args.correct_ans_variances))
-        self.logger.log_debug('{} - Other Options: {}'.format(s, args.other_options))
+        text = '{}::: S1- {}, S2- {}, S3- {}, S4- {}'.format(s, args.actual_answer, args.utterance_answer,
+                                                             args.correct_ans_variances, args.other_options)
+        self.logger.log_debug(text)
 
     def process_args(self, args):
         p_args = self.utils.clone(args)
@@ -254,7 +276,8 @@ class GetSimilarity:
         return p_args
 
     def filter_common_words_from_options(self, args):
-        if args.other_options and self.utils.is_removal_common_words_required([args.actual_answer] + args.other_options):
+        if args.other_options and self.utils.is_removal_common_words_required(
+                [args.actual_answer] + args.other_options):
             filtered_args = self.utils.clone(args)
             have_common_words, common_words = self.utils.get_common_words_in_options(filtered_args)
             if have_common_words:
@@ -313,20 +336,20 @@ class GetSimilarity:
                 self.logger.log_error('Utterance field can not be Blank or None')
                 return self.populate_payload(raw_args, Result())
 
-            # self.log_inputs('Preprocess Step1: Raw ARgs: ', raw_args)
+            self.log_inputs('Raw ARgs: ', raw_args)
 
             processed_args = self.process_args(raw_args)
             if self.config.remove_stop_words:
                 nlp_processed_args = self.remove_stopwords_from_args(processed_args)
             else:
                 nlp_processed_args = processed_args
-            #self.log_inputs('Preprocess Step2: NLP Processed ARgs: ', nlp_processed_args)
+            self.log_inputs('NLP Processed ARgs: ', nlp_processed_args)
 
             filtered_args = self.filter_common_words_from_options(nlp_processed_args)
-            #self.log_inputs('Preprocess Step3: Filtered ARgs: ', filtered_args)
+            self.log_inputs('Filtered ARgs: ', filtered_args)
 
             args = self.run_sanity_check(args=self.utils.clone(filtered_args))
-            self.log_inputs('Preprocess Step4: Sanity Check ARgs: ', args)
+            self.log_inputs('Sanity Check ARgs: ', args)
 
             scores_list, word_list, method_list, similar_list = [], [], [], []
             try:
@@ -364,13 +387,13 @@ class GetSimilarity:
                     if self.get_best_match and len(scores_list) > 0:
                         max_index = self.utils.get_best_match(scores_list)
                         match_score = scores_list[max_index]
-                        if match_score == 0.0 and not(method_list[max_index] in self.reject_match_methods):
+                        if match_score == 0.0 and not (method_list[max_index] in self.reject_match_methods):
                             return self.populate_payload(processed_args, Result())
                         return self.populate_payload(processed_args,
                                                      Result(is_similar=similar_list[max_index],
-                                                         match_score=scores_list[max_index],
-                                                         match_word=word_list[max_index],
-                                                         match_method=method_list[max_index]))
+                                                            match_score=scores_list[max_index],
+                                                            match_word=word_list[max_index],
+                                                            match_method=method_list[max_index]))
                 return self.populate_payload(processed_args, Result())
             except ValueError:
                 self.logger.log_error('Got Value Error Exception')

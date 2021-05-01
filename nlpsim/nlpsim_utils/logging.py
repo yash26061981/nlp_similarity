@@ -29,7 +29,7 @@ class LogAppStd:
 
         file_handler = RotatingFileHandler(_LOGFILE_PATH,
                                            maxBytes=_LOGFILE_MBSZ,
-                                           backupCount=1)
+                                           backupCount=10)
         file_handler.setLevel(_LOGFILE_LEVL)
         file_handler.setFormatter(formatter)
 

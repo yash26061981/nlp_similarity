@@ -11,7 +11,7 @@ class Params:
         self.use_aggresive_partial_match = True
         self.best_th = 0.8
         self.avg_list_overlap_score = 0.4
-        self.reject_syn_ant_match = False
+        self.reject_syn_ant_match = True
         self.reject_word_forms = False
         self.remove_stop_words = False
         pass
