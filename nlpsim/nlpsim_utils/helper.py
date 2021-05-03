@@ -8,6 +8,7 @@ import numpy as np
 from word2number import w2n
 from nltk.corpus import wordnet
 from pyinflect import getAllInflections, getInflection
+from nlpsim.nlpsim_utils.word_to_num import *
 
 
 class Helper:
@@ -17,6 +18,7 @@ class Helper:
         self.synantnet = wordnet.synsets
         self.inflect_engine = inflect.engine()
         self.w2n_engine = w2n
+        self.w2num_inhouse = Word2Num()
         pass
 
     def word_tokenize(self, input_sentence):
@@ -42,6 +44,21 @@ class Helper:
         num = self.inflect_engine.number_to_words(string, group=group)
         num = num.replace(",", "").replace("-", " ")
         return num
+
+    def get_all_forms_of_number_to_words(self, string, group=0):
+        num1 = self.inflect_engine.number_to_words(string, group=group)
+        num1 = num1.replace(",", "").replace("-", " ")
+        num2 = self.inflect_engine.plural(self.inflect_engine.number_to_words(self.inflect_engine.ordinal(string)))
+        num2 = num2.replace(",", "").replace("-", " ")
+        num3 = self.inflect_engine.number_to_words(self.inflect_engine.ordinal(string))
+        num3 = num3.replace(",", "").replace("-", " ")
+        num4 = self.inflect_engine.plural(self.inflect_engine.number_to_words(string))
+        num4 = num4.replace(",", "").replace("-", " ")
+        return [num1, num2, num3, num4]
+
+    def get_all_forms_of_number_to_words_inhouse(self, string):
+        return self.w2num_inhouse.word2number(string)
+
 
     def get_additional_numberwords(self, string):
         additional_group, str1_group, str2_group = [], [], []

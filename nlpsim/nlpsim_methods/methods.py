@@ -114,6 +114,52 @@ class Methods:
                 return False, 0.0, None, True
         return False, 0.0, None, False
 
+    def match_using_hybrid_num_letters_alternate_1(self, args):
+        actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
+        a_val_list = actual_answer.split()
+        u_val_list = utterance_answer.split()
+        if len(a_val_list) == len(u_val_list):
+            match = [False] * len(a_val_list)
+            is_a_digit_list = [self.utils.check_if_digit(a_val) for a_val in a_val_list]
+            is_u_digit_list = [self.utils.check_if_digit(u_val) for u_val in u_val_list]
+            index, pass_index = 0, 0
+            for is_a_digit, is_u_digit, a_val, u_val in zip(is_a_digit_list, is_u_digit_list, a_val_list, u_val_list):
+                if is_a_digit and not is_u_digit:
+                    a_words_list = self.helper.get_all_forms_of_number_to_words(a_val)
+                    if u_val in a_words_list:
+                        match[index] = True
+                        pass_index += 1
+                elif not is_a_digit and is_u_digit:
+                    u_words_list = self.helper.get_all_forms_of_number_to_words(u_val)
+                    if a_val in u_words_list:
+                        match[index] = True
+                        pass_index += 1
+                else:
+                    if a_val == u_val:
+                        match[index] = True
+                        pass_index += 1
+                index += 1
+            pass_score = float(pass_index)/len(match)
+            if pass_score > threshold:
+                return True, pass_score, True
+            else:
+                return False, pass_score, False
+        return False, 0.0, False
+
+    def match_using_hybrid_num_letters_alternate_2(self, args):
+        actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
+        a_words = self.helper.get_all_forms_of_number_to_words_inhouse(actual_answer)
+        u_words = self.helper.get_all_forms_of_number_to_words_inhouse(utterance_answer)
+        print(a_words, utterance_answer, u_words, actual_answer)
+        is_similar1, word_match_score1 = \
+            self.match_using_cosine_similarity(a_words, utterance_answer, args.threshold)
+        is_similar2, word_match_score2 = \
+            self.match_using_cosine_similarity(u_words, actual_answer, args.threshold)
+        if is_similar1 or is_similar2:
+            return True, max(word_match_score1, word_match_score2), True
+        else:
+            return False, min(word_match_score1, word_match_score2), False
+
     @staticmethod
     def get_non_matched_string(word1, matched_word):
         matched_sent = ' '.join(matched_word).strip()

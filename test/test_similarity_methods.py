@@ -9,10 +9,14 @@ if __name__ == '__main__':
     threshold = 0.4
     get_similarity = GetSimilarity(threshold=threshold)
     # test data for testing
-    s1 = 'worse'
-    s2 = '[was, worst, vs, vas, verse, worse, vaaste, watch, bus]'
+    #s1 = 'Fourteen Ones and Nine Tenths'
+    #s2 = '[14 1 and 9 10, 14 1 and 910, 14-1 and 910, 14 1 and 9-10, 14/1 and 910, 14 one and 910, 14-1 and 910]'
     s3 = None
-    s4 = '[Badest, Worst, Badder]'
+    s4 = None
+
+    s1 = '13/4'
+    s2 = '[13 by 4, 13 by four, 13 by 44, thirteen by 4, 13th by 4, 13 bi 4, 13 bifo, 13 by IV, 13 by 4:00, 39 by 4]'
+
 
     match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4, th=threshold)
     print('s1 = {}'.format(match.actual_answer))

@@ -93,12 +93,26 @@ class GetSimilarity:
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
-        elif args.method == 'HybridMatch':
+        elif args.method == 'HybridMatch1':
             is_similar, nw_score, match_word, skip_match = self.methods.match_using_hybrid_num_letters(args)
             utt_ans_match = utterance_answer + ' -({})'.format(match_word)
             self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
                                  format(args.method, is_similar, nw_score, utt_ans_match))
             return Result(match_score=nw_score, match_method=args.method, match_word=utt_ans_match,
+                          is_similar=is_similar, skip_match=skip_match)
+
+        elif args.method == 'HybridMatch2':
+            is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_1(args)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, nw_score, args.utterance_answer))
+            return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
+                          is_similar=is_similar, skip_match=skip_match)
+
+        elif args.method == 'HybridMatch3':
+            is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_2(args)
+            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
+                                 format(args.method, is_similar, nw_score, args.utterance_answer))
+            return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'SynAnt':
@@ -172,12 +186,28 @@ class GetSimilarity:
         if num_word_result.is_similar or num_word_result.skip_match:
             return num_word_result
 
-        args.method = 'HybridMatch'
+        args.method = 'HybridMatch1'
         hybrid_match_result = self.use_method(args)
         score.append(hybrid_match_result.score), utt_ans.append(hybrid_match_result.match_word)
         method.append(hybrid_match_result.match_method)
         if hybrid_match_result.is_similar or hybrid_match_result.skip_match:
             return hybrid_match_result
+
+        args.method = 'HybridMatch2'
+        args.threshold = self.config.hybrid_match_alternate_threshold
+        hybrid_match_alternate_result = self.use_method(args)
+        score.append(hybrid_match_alternate_result.score), utt_ans.append(hybrid_match_alternate_result.match_word)
+        method.append(hybrid_match_alternate_result.match_method)
+        if hybrid_match_alternate_result.is_similar or hybrid_match_alternate_result.skip_match:
+            return hybrid_match_alternate_result
+
+        args.method = 'HybridMatch3'
+        args.threshold = self.config.hybrid_match_alternate_threshold
+        hybrid_match_alternate_result = self.use_method(args)
+        score.append(hybrid_match_alternate_result.score), utt_ans.append(hybrid_match_alternate_result.match_word)
+        method.append(hybrid_match_alternate_result.match_method)
+        if hybrid_match_alternate_result.is_similar or hybrid_match_alternate_result.skip_match:
+            return hybrid_match_alternate_result
 
         args.threshold = self.threshold
         args.method = 'WordForm'
