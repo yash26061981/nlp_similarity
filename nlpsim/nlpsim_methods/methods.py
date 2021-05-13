@@ -150,15 +150,17 @@ class Methods:
         actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
         a_words = self.helper.get_all_forms_of_number_to_words_inhouse(actual_answer)
         u_words = self.helper.get_all_forms_of_number_to_words_inhouse(utterance_answer)
-        print(a_words, utterance_answer, u_words, actual_answer)
+        # print(a_words, utterance_answer, u_words, actual_answer)
         is_similar1, word_match_score1 = \
             self.match_using_cosine_similarity(a_words, utterance_answer, args.threshold)
         is_similar2, word_match_score2 = \
             self.match_using_cosine_similarity(u_words, actual_answer, args.threshold)
-        if is_similar1 or is_similar2:
-            return True, max(word_match_score1, word_match_score2), True
+        is_similar3, word_match_score3 = \
+            self.match_using_cosine_similarity(u_words, a_words, args.threshold)
+        if is_similar1 or is_similar2 or is_similar3:
+            return True, max(word_match_score1, word_match_score2, word_match_score3), True
         else:
-            return False, min(word_match_score1, word_match_score2), False
+            return False, min(word_match_score1, word_match_score2, word_match_score3), False
 
     @staticmethod
     def get_non_matched_string(word1, matched_word):
@@ -295,8 +297,6 @@ class Methods:
         if ratio >= self.config.fuzzy_match_th:
             return True, ratio, u_ans
         return False, ratio, u_ans
-
-
 
 
 if __name__ == '__main__':
