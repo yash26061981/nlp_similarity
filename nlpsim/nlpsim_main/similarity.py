@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../.."))
 from nlpsim_methods.methods import *
 from nlpsim_utils.utilities import *
 from nlpsim_utils.helper import *
-from nlpsim_utils.logging import *
+from nlpsim_utils.nlp_logging import *
 from nlpsim_main.params import *
 
 
