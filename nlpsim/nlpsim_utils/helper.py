@@ -5,7 +5,6 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path(".")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
-
 import math
 import nltk
 import inflect

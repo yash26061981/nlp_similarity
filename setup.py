@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 import pathlib, os
-from nlpsim.nlpsim_utils.get_updated_version import VersionManager
+from nlpsim.get_updated_version import VersionManager
 
 root = pathlib.Path(__file__).parent
 os.chdir(str(root))
@@ -8,7 +8,7 @@ os.chdir(str(root))
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-version = VersionManager().get_version(build=True)
+version = VersionManager().get_version()
 
 setup(
     name='nlpsim',
