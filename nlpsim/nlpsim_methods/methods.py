@@ -162,18 +162,6 @@ class Methods:
         else:
             return False, min(word_match_score1, word_match_score2, word_match_score3), False
 
-    @staticmethod
-    def get_non_matched_string(word1, matched_word):
-        matched_sent = ' '.join(matched_word).strip()
-        match_blocks = SequenceMatcher(None, word1, matched_sent).get_matching_blocks()
-        for block in match_blocks:
-            if block.size > 0:
-                overlap_word = word1[block.a:block.a + block.size]
-                if overlap_word == matched_sent:
-                    filtered_word = re.sub(overlap_word, "", word1)
-                    return filtered_word
-        return word1
-
     #TODO
     def match_using_string_overlap(self, a_ans, u_ans, threshold):
         '''

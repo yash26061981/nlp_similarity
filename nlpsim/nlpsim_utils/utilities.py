@@ -63,7 +63,8 @@ class Utilities:
                     word2 = word2[0]
         return word2
 
-    def get_list_from_str(self, word, get_list=True):
+    @staticmethod
+    def get_list_from_str(word, get_list=True):
         if get_list:
             at_val = [v.strip().lower() for v in word.lstrip('\[{').rstrip('\]}').split(',')]
         else:
@@ -126,7 +127,7 @@ class Utilities:
         return ' '.join(word1_list).strip()
 
     @staticmethod
-    def is_removal_common_words_required(options):
+    def are_removal_common_words_required(options):
         len_opt = [len(opt.split(' ')) for opt in options]
         if len(np.unique(len_opt).tolist()) == 1:
             return True

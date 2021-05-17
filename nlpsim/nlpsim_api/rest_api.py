@@ -41,12 +41,14 @@ def similarity():
         s1, s2, s3, s4 = get_input_sentences()
         match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4)
         end = time.time()
+        ms = round((end - start) * 1000, 4)
         response = make_response(
             jsonify(
-                {"Correct_Ans": s1.replace('"', ''), "Entered_Ans": s2.replace('"', ''), "Score": match.score,
-                 "Similarity": match.is_similar, "Time in seconds": (end-start),
+                {"Correct_Ans": s1.replace('"', ''), "Entered_Ans": s2.replace('"', ''),
+                 "Score": match.score, "Similarity": match.is_similar, "Time in millisec": ms,
                  "Method": match.match_method, "Match": match.match_word}), 200)
         response.headers["Content-Type"] = "application/json"
+        print(response)
         return response
     except OSError as err:
         print("OS error: {0}".format(err))

@@ -11,6 +11,7 @@ from nlpsim_utils.utilities import *
 from nlpsim_utils.helper import *
 from nlpsim_utils.nlp_logging import *
 from nlpsim_main.params import *
+from nlpsim_main.process_args import *
 
 
 # nltk.download("stopwords")
@@ -56,6 +57,8 @@ class GetSimilarity:
         self.methods = Methods(threshold, self.config)
         self.helper = Helper()
         self.logger = LogAppStd(cwd)
+        self.argparse = ProcessArgs(cwd, threshold)
+        self.output = Result()
         # self.rhyming = GetRhymingWords()
         self.threshold = threshold
         self.enable_rhyming = self.config.enable_rhyme
@@ -253,94 +256,6 @@ class GetSimilarity:
         return Result(is_similar=False, match_score=score[max_index],
                       match_word=utt_ans[max_index], match_method=method[max_index])
 
-    def parse_args(self, **kwargs):
-        try:
-            s1 = kwargs.get('s1')
-            s2 = kwargs.get('s2')
-            s1 = s1 if len(s1) > 0 else None
-            s2 = s2 if len(s2) > 0 else None
-        except:
-            self.logger.log_error('Got Input Error Exception')
-            return Input()
-
-        if kwargs.get('th') is not None:
-            th = kwargs.get('th')
-        else:
-            th = self.threshold
-
-        if kwargs.get('s3') is not None:
-            s3 = kwargs.get('s3')
-            s3 = s3 if len(s3) > 0 else None
-        else:
-            s3 = None
-        if kwargs.get('s4') is not None:
-            s4 = kwargs.get('s4')
-            s4 = s4 if len(s4) > 0 else None
-        else:
-            s4 = None
-        return Input(actual_answer=s1, utterance_answer=s2, correct_ans_variances=s3, other_options=s4, threshold=th)
-
-    def process_args_old(self, args):
-        p_args = self.utils.clone(args)
-        p_args.actual_answer = self.utils.remove_noise(args.actual_answer)[0]
-        p_args.utterance_answer = self.utils.remove_noise(args.utterance_answer, get_list=True)
-        p_args.correct_ans_variances = self.utils.remove_noise(args.correct_ans_variances, get_list=True) \
-            if args.correct_ans_variances is not None else None
-        p_args.other_options = self.utils.remove_noise(args.other_options, get_list=True) \
-            if args.other_options is not None else None
-        return p_args
-
-    def log_inputs(self, s, args):
-        text = '{}::: S1- {}, S2- {}, S3- {}, S4- {}'.format(s, args.actual_answer, args.utterance_answer,
-                                                             args.correct_ans_variances, args.other_options)
-        self.logger.log_debug(text)
-
-    def process_args(self, args):
-        p_args = self.utils.clone(args)
-        p_args.actual_answer = self.utils.get_list_from_str(args.actual_answer, get_list=True)[0]
-        p_args.utterance_answer = self.utils.get_list_from_str(args.utterance_answer, get_list=True)
-        p_args.correct_ans_variances = self.utils.get_list_from_str(args.correct_ans_variances, get_list=True) \
-            if args.correct_ans_variances is not None else None
-        p_args.other_options = self.utils.get_list_from_str(args.other_options, get_list=True) \
-            if args.other_options is not None else None
-        return p_args
-
-    def filter_common_words_from_options(self, args):
-        if args.other_options and self.utils.is_removal_common_words_required(
-                [args.actual_answer] + args.other_options):
-            filtered_args = self.utils.clone(args)
-            have_common_words, common_words = self.utils.get_common_words_in_options(filtered_args)
-            if have_common_words:
-                act_ans_new = self.utils.remove_common_words(filtered_args.actual_answer, common_words)
-                act_ans_new = act_ans_new if len(act_ans_new) > 0 else None
-                filtered_utterances = []
-                for u_sentence in args.utterance_answer:
-                    utt_ans_new = self.utils.remove_common_words(u_sentence, common_words)
-                    if utt_ans_new == u_sentence:
-                        utt_ans_new = self.methods.get_non_matched_string(u_sentence, common_words)
-                    utt_ans_new = utt_ans_new if len(utt_ans_new) > 0 else None
-                    if utt_ans_new:
-                        filtered_utterances.append(utt_ans_new)
-                filtered_args.actual_answer = act_ans_new
-                filtered_args.utterance_answer = filtered_utterances
-            return filtered_args
-        else:
-            return args
-
-    def remove_stopwords_from_args(self, args):
-        p_args = self.utils.clone(args)
-        o_filtered = self.helper.tokenize_and_remove_stopwords(args.other_options) \
-            if args.other_options else args.other_options
-        u_filtered = self.helper.tokenize_and_remove_stopwords(args.utterance_answer)
-        a_filtered = self.helper.tokenize_and_remove_stopwords([args.actual_answer])
-        v_filtered = self.helper.tokenize_and_remove_stopwords(args.correct_ans_variances) \
-            if args.correct_ans_variances else args.correct_ans_variances
-        p_args.actual_answer = a_filtered[0]
-        p_args.other_options = o_filtered
-        p_args.utterance_answer = u_filtered
-        p_args.correct_ans_variances = v_filtered
-        return p_args
-
     @staticmethod
     def populate_payload(args, match_result):
         match_result.actual_answer = args.actual_answer
@@ -349,48 +264,22 @@ class GetSimilarity:
         match_result.other_options = args.other_options
         return match_result
 
-    def run_sanity_check(self, args):
-        args.actual_answer = self.utils.run_sanity_check(args.actual_answer, islist=False)
-        args.utterance_answer = self.utils.run_sanity_check(args.utterance_answer)
-        args.correct_ans_variances = self.utils.run_sanity_check(args.correct_ans_variances)
-        args.other_options = self.utils.run_sanity_check(args.other_options)
-        return args
-
     def get_similarity(self, **kwargs):
         try:
-            raw_args = self.parse_args(**kwargs)
-            if raw_args.actual_answer is None:
-                self.logger.log_error('Correct Answer field can not be Blank or None')
-                return self.populate_payload(raw_args, Result())
-            if raw_args.utterance_answer is None:
-                self.logger.log_error('Utterance field can not be Blank or None')
-                return self.populate_payload(raw_args, Result())
-
-            self.log_inputs('Raw ARgs: ', raw_args)
-
-            processed_args = self.process_args(raw_args)
-            if self.config.remove_stop_words:
-                nlp_processed_args = self.remove_stopwords_from_args(processed_args)
-            else:
-                nlp_processed_args = processed_args
-            self.log_inputs('NLP Processed ARgs: ', nlp_processed_args)
-
-            filtered_args = self.filter_common_words_from_options(nlp_processed_args)
-            self.log_inputs('Filtered ARgs: ', filtered_args)
-
-            args = self.run_sanity_check(args=self.utils.clone(filtered_args))
-            self.log_inputs('Sanity Check ARgs: ', args)
-
+            raw_args, processed_args, filtered_args, final_args = self.argparse.parse_and_check_args(**kwargs)
+            if raw_args.actual_answer is None or raw_args.utterance_answer is None:
+                self.logger.log_error('Correct Answer/ Utterances field can not be Blank or None')
+                return self.populate_payload(raw_args, self.output)
             scores_list, word_list, method_list, similar_list = [], [], [], []
             try:
-                if args.other_options:
-                    args.method = 'OtherOptionsAnswered'
-                    other_option_ans_result = self.use_method(args)
+                if final_args.other_options:
+                    final_args.method = 'OtherOptionsAnswered'
+                    other_option_ans_result = self.use_method(final_args)
                     if other_option_ans_result.is_similar:
-                        return self.populate_payload(processed_args, Result(match_method=args.method))
+                        return self.populate_payload(processed_args, Result(match_method=final_args.method))
 
-                args.method = 'DirectMatch'
-                dm_result = self.use_method(args)
+                final_args.method = 'DirectMatch'
+                dm_result = self.use_method(final_args)
 
                 if dm_result.is_similar:
                     return self.populate_payload(processed_args, dm_result)
@@ -398,9 +287,9 @@ class GetSimilarity:
                     for u_sentence in filtered_args.utterance_answer:
                         if u_sentence is None:
                             continue
-                        args.utterance_answer = u_sentence
+                        final_args.utterance_answer = u_sentence
                         match_result = \
-                            self.find_similarity(args)
+                            self.find_similarity(final_args)
 
                         if match_result.score >= self.best_th:
                             return self.populate_payload(processed_args, match_result)

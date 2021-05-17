@@ -2,17 +2,19 @@
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
-
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path(".")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
-import math
+from nlpsim_utils.word_to_num import *
 import nltk
 import inflect
 import numpy as np
 from word2number import w2n
 from nltk.corpus import wordnet
 from pyinflect import getAllInflections, getInflection
-from nlpsim_utils.word_to_num import *
+from difflib import SequenceMatcher
+import re
+from indic_transliteration import sanscript
+from indic_transliteration.sanscript import SchemeMap, SCHEMES, transliterate
 
 
 class Helper:
@@ -62,7 +64,6 @@ class Helper:
 
     def get_all_forms_of_number_to_words_inhouse(self, string):
         return self.w2num_inhouse.word2number(string)
-
 
     def get_additional_numberwords(self, string):
         additional_group, str1_group, str2_group = [], [], []
@@ -138,6 +139,18 @@ class Helper:
         return synonyms, antonyms
 
     @staticmethod
+    def get_non_matched_string(word1, matched_word):
+        matched_sent = ' '.join(matched_word).strip()
+        match_blocks = SequenceMatcher(None, word1, matched_sent).get_matching_blocks()
+        for block in match_blocks:
+            if block.size > 0:
+                overlap_word = word1[block.a:block.a + block.size]
+                if overlap_word == matched_sent:
+                    filtered_word = re.sub(overlap_word, "", word1)
+                    return filtered_word
+        return word1
+
+    @staticmethod
     def get_word_forms(word):
         forms = getAllInflections(word)
         forms_list = [list(v)[0] for k,v in forms.items()]
@@ -146,6 +159,11 @@ class Helper:
 
     def check_if_set_subset_in_options(self, options):
         option_list = [list(self.remove_stop_words(opt).values()) for opt in options]
+
+    @staticmethod
+    def convert_devanagari_to_IndicItrans(input):
+        new_data = [transliterate(data, sanscript.DEVANAGARI, sanscript.ITRANS) for data in input]
+        return new_data
 
 
 if __name__ == '__main__':
