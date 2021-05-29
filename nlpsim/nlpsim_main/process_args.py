@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
@@ -14,21 +17,22 @@ from nlpsim_main.output_class import *
 
 class Input:
     def __init__(self, actual_answer=None, utterance_answer=None,
-                 correct_ans_variances=None, other_options=None, threshold=0.0, method='None'):
+                 correct_ans_variances=None, other_options=None, threshold=0.0, method='None', quest_id=None):
         self.actual_answer = actual_answer
         self.utterance_answer = utterance_answer
         self.correct_ans_variances = correct_ans_variances
         self.other_options = other_options
         self.threshold = threshold
         self.method = method
+        self.quest_id = quest_id
         pass
 
 
 class ProcessArgs:
-    def __init__(self, cwd=None, threshold=0.4):
+    def __init__(self, logger, threshold=0.4):
         self.config = Params()
         self.utils = Utilities()
-        self.logger = LogAppStd(cwd)
+        self.logger = logger
         self.helper = Helper()
         self.threshold = threshold
         self.output = Result()
@@ -37,24 +41,24 @@ class ProcessArgs:
     def parse_and_check_args(self, **kwargs):
         raw_args = self.parse_args(**kwargs)
         if raw_args.actual_answer is None or raw_args.utterance_answer is None:
-            return False, None, None, None
+            return raw_args, None, None, None
 
-        # self.log_inputs('Raw ARgs: ', raw_args)
+        self.log_inputs('Raw ARgs:           ', raw_args)
         processed_args = self.process_args(raw_args)
         if self.config.remove_stop_words:
             nlp_processed_args = self.remove_stopwords_from_args(processed_args)
         else:
             nlp_processed_args = processed_args
-        # self.log_inputs('NLP Processed ARgs: ', nlp_processed_args)
+        self.log_inputs('NLP Processed ARgs: ', nlp_processed_args)
         # Apply unilanguage translation. translate all fonts to english alphanumeric
         uni_lang_args = self.convert_to_indic_alphanumeric(nlp_processed_args)
-        self.log_inputs('UniLanguage ARgs: ', uni_lang_args)
+        self.log_inputs('Indic ARgs:         ', uni_lang_args)
 
         filtered_args = self.filter_common_words_from_options(uni_lang_args)
-        # self.log_inputs('Filtered ARgs: ', filtered_args)
+        self.log_inputs('Filtered ARgs:      ', filtered_args)
 
         final_args = self.run_sanity_check(args=self.utils.clone(filtered_args))
-        self.log_inputs('Sanity Check ARgs: ', final_args)
+        self.log_inputs('Final ARgs:         ', final_args)
         return raw_args, processed_args, filtered_args, final_args
 
     def parse_args(self, **kwargs):
@@ -82,7 +86,13 @@ class ProcessArgs:
             s4 = s4 if len(s4) > 0 else None
         else:
             s4 = None
-        return Input(actual_answer=s1, utterance_answer=s2, correct_ans_variances=s3, other_options=s4, threshold=th)
+        if kwargs.get('q_id') is not None:
+            q_id = kwargs.get('q_id')
+        else:
+            q_id = None
+
+        return Input(actual_answer=s1, utterance_answer=s2, correct_ans_variances=s3,
+                     other_options=s4, threshold=th, quest_id=q_id)
 
     def log_inputs(self, s, args):
         text = '{}::: S1- {}, S2- {}, S3- {}, S4- {}'.format(s, args.actual_answer, args.utterance_answer,

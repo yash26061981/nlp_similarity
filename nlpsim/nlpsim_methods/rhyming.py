@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import pronouncing
 from Phyme import Phyme
 import numpy as np

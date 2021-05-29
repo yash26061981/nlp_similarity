@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
@@ -163,7 +165,8 @@ class Helper:
     @staticmethod
     def convert_devanagari_to_IndicItrans(input):
         new_data = [transliterate(data, sanscript.DEVANAGARI, sanscript.ITRANS) for data in input]
-        return new_data
+        lowered_data = [data.lower() for data in new_data]
+        return lowered_data
 
 
 if __name__ == '__main__':

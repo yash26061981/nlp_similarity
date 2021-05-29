@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
@@ -57,7 +58,7 @@ class GetSimilarity:
         self.methods = Methods(threshold, self.config)
         self.helper = Helper()
         self.logger = LogAppStd(cwd)
-        self.argparse = ProcessArgs(cwd, threshold)
+        self.argparse = ProcessArgs(self.logger, threshold)
         self.output = Result()
         # self.rhyming = GetRhymingWords()
         self.threshold = threshold
@@ -76,45 +77,33 @@ class GetSimilarity:
         if args.method == 'OtherOptionsAnswered':
             is_similar, other_option_match_score, matched_utterance = \
                 self.methods.check_if_other_options_answered(args)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, other_option_match_score, matched_utterance))
             return Result(match_score=other_option_match_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
         if args.method == 'DirectMatch':
             is_similar, dm_score, matched_utterance = \
                 self.methods.is_direct_match(args)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, dm_score, matched_utterance))
             return Result(match_score=dm_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
         elif args.method == 'NumWord':
             is_similar, nw_score, skip_match = self.methods.match_using_numbers_and_words(args)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, nw_score, args.utterance_answer))
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'HybridMatch1':
             is_similar, nw_score, match_word, skip_match = self.methods.match_using_hybrid_num_letters(args)
             utt_ans_match = utterance_answer + ' -({})'.format(match_word)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, nw_score, utt_ans_match))
             return Result(match_score=nw_score, match_method=args.method, match_word=utt_ans_match,
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'HybridMatch2':
             is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_1(args)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, nw_score, args.utterance_answer))
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'HybridMatch3':
             is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_2(args)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, nw_score, args.utterance_answer))
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
@@ -122,23 +111,17 @@ class GetSimilarity:
             check = self.methods.check_if_syn_ant_match(actual_answer, utterance_answer)
             if check and not self.config.reject_syn_ant_match:
                 check = False
-            self.logger.log_info('Method: {} - isSynAnt: {} - RejectParam: {}'
-                                 .format(args.method, check, self.config.reject_syn_ant_match))
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
         elif args.method == 'WordForm':
             check = self.methods.check_if_word_forms_match(actual_answer, utterance_answer)
             if check and not self.config.reject_word_forms:
                 check = False
-            self.logger.log_info('Method: {} - isWordForm: {} - RejectParam: {}'.
-                                 format(args.method, check, self.config.reject_word_forms))
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
         elif args.method == 'Cosine':
             is_similar, cosine_score = \
                 self.methods.match_using_cosine_similarity(actual_answer, utterance_answer, threshold)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, cosine_score, utterance_answer))
             return Result(match_score=cosine_score, match_method=args.method, is_similar=is_similar,
                           match_word=utterance_answer)
 
@@ -146,24 +129,18 @@ class GetSimilarity:
             is_similar, ov_score, overlap_word = \
                 self.methods.match_using_string_overlap(actual_answer, utterance_answer, threshold)
             utt_ans_overlap = utterance_answer + ' -({})'.format(overlap_word)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, ov_score, overlap_word))
             return Result(match_score=ov_score, match_method=args.method,
                           is_similar=is_similar, match_word=utt_ans_overlap)
 
         elif args.method == 'Rhyme':
             is_similar, rh_score, rhyme_word = \
                 self.methods.match_using_rhyming_words(actual_answer, utterance_answer, threshold, best_match=False)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, rh_score, rhyme_word))
             return Result(match_score=rh_score, match_method=args.method,
                           is_similar=is_similar, match_word=rhyme_word)
 
         elif args.method == 'FuzzyMatch':
             is_similar, fm_score, fm_word = \
                 self.methods.match_using_fuzzy_logic(actual_answer, utterance_answer)
-            self.logger.log_info('Method: {} - Similar: {} - Score: {} - Matched {}'.
-                                 format(args.method, is_similar, fm_score, fm_word))
             return Result(match_score=fm_score, match_method=args.method,
                           is_similar=is_similar, match_word=fm_word)
         else:
@@ -256,8 +233,11 @@ class GetSimilarity:
         return Result(is_similar=False, match_score=score[max_index],
                       match_word=utt_ans[max_index], match_method=method[max_index])
 
-    @staticmethod
-    def populate_payload(args, match_result):
+    def populate_payload(self, args, match_result, got_exception=False):
+        if not got_exception:
+            self.logger.log_info('Method: {} :: Similar: {} :: Score: {} :: Matched: {} :: QuestionID: {}'.format(
+                match_result.match_method, match_result.is_similar, match_result.score,
+                match_result.match_word, args.quest_id))
         match_result.actual_answer = args.actual_answer
         match_result.entered_ans = args.utterance_answer
         match_result.true_alternatives = args.correct_ans_variances
@@ -269,8 +249,9 @@ class GetSimilarity:
             raw_args, processed_args, filtered_args, final_args = self.argparse.parse_and_check_args(**kwargs)
             if raw_args.actual_answer is None or raw_args.utterance_answer is None:
                 self.logger.log_error('Correct Answer/ Utterances field can not be Blank or None')
-                return self.populate_payload(raw_args, self.output)
+                return self.populate_payload(raw_args, self.output, got_exception=True)
             scores_list, word_list, method_list, similar_list = [], [], [], []
+            utterance_answer = self.utils.clone(final_args.utterance_answer)
             try:
                 if final_args.other_options:
                     final_args.method = 'OtherOptionsAnswered'
@@ -284,7 +265,7 @@ class GetSimilarity:
                 if dm_result.is_similar:
                     return self.populate_payload(processed_args, dm_result)
                 else:
-                    for u_sentence in filtered_args.utterance_answer:
+                    for u_sentence in utterance_answer:
                         if u_sentence is None:
                             continue
                         final_args.utterance_answer = u_sentence
@@ -316,16 +297,19 @@ class GetSimilarity:
                 return self.populate_payload(processed_args, Result())
             except ValueError:
                 self.logger.log_error('Got Value Error Exception')
-                return self.populate_payload(processed_args, Result(match_method='Value Error Exception'))
+                return self.populate_payload(processed_args, Result(match_method='Value Error Exception'),
+                                             got_exception=True)
             except BaseException as e:
                 self.logger.log_error('Got ERROR ' + str(e))
-                return self.populate_payload(processed_args, Result(match_method='Got ERROR ' + str(e)))
+                return self.populate_payload(processed_args, Result(match_method='Got ERROR ' + str(e)),
+                                             got_exception=True)
             except:
                 self.logger.log_error('Got Unknown Exception')
-                return self.populate_payload(processed_args, Result(match_method='Got Unknown Exception'))
+                return self.populate_payload(processed_args, Result(match_method='Got Unknown Exception'),
+                                             got_exception=True)
         except:
             self.logger.log_error('Got Unknown Exception')
-            return self.populate_payload(Input(), Result(match_method='Got Unknown Exception'))
+            return self.populate_payload(Input(), Result(match_method='Got Unknown Exception'), got_exception=True)
 
     def process(self, **kwargs):
         return self.get_similarity(**kwargs)

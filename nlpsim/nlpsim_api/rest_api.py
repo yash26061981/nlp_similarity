@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -25,21 +26,22 @@ def initialise(cwd):
 
 
 def get_input_sentences():
-    s1, s2, s3, s4 = 'None', 'None', 'None', 'None'
+    s1, s2, s3, s4, q_id = 'None', 'None', 'None', 'None', 'None'
     if request.method == 'GET':
         s1 = request.args.get('s1', None)
         s2 = request.args.get('s2', None)
         s3 = request.args.get('s3', None)
         s4 = request.args.get('s4', None)
-    return s1, s2, s3, s4
+        q_id = request.args.get('q_id', None)
+    return s1, s2, s3, s4, q_id
 
 
 @app.route('/similarity', methods=['GET', 'POST'])
 def similarity():
     try:
         start = time.time()
-        s1, s2, s3, s4 = get_input_sentences()
-        match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4)
+        s1, s2, s3, s4, q_id = get_input_sentences()
+        match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4, q_id=q_id)
         end = time.time()
         ms = round((end - start) * 1000, 4)
         response = make_response(

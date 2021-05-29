@@ -17,4 +17,4 @@ setuptools==53.0.0
 
 ###### A particular file ######
 indic_transliteration==2.1.0
-git+https://github.com/sanskrit-coders/indic_transliteration/@master -U
+#git+https://github.com/sanskrit-coders/indic_transliteration/@master -U
