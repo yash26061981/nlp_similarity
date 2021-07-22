@@ -53,7 +53,7 @@ class Word2Num:
         def from_number_word(x):
             if self.is_number(x):
                 scale = 0
-                increment = int(x.replace(',', ''))
+                increment = int(float(x.replace(',', '')))
                 return scale, increment
             return num_words[x]
 

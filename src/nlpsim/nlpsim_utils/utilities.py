@@ -30,8 +30,15 @@ class Utilities:
         return path
 
     @staticmethod
-    def check_if_digit(word):
-        return word.isdigit()
+    def check_if_float(word):
+        try:
+            _ = float(word)
+            return True
+        except ValueError:
+            return False
+
+    def check_if_digit(self, word):
+        return word.isdigit() or self.check_if_float(word)
 
     @staticmethod
     def remove_braces_from_input_text(at_val):
