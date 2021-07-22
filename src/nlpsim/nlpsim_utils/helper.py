@@ -4,9 +4,10 @@
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
-sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path(".")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
-from nlpsim_utils.word_to_num import *
+sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
+from nlpsim.nlpsim_utils.word_to_num import *
+from nlpsim.nlpsim_main.params import *
 import nltk
 import inflect
 import numpy as np
@@ -15,8 +16,6 @@ from nltk.corpus import wordnet
 from pyinflect import getAllInflections, getInflection
 from difflib import SequenceMatcher
 import re
-from indic_transliteration import sanscript
-from indic_transliteration.sanscript import SchemeMap, SCHEMES, transliterate
 
 
 class Helper:
@@ -27,6 +26,7 @@ class Helper:
         self.inflect_engine = inflect.engine()
         self.w2n_engine = w2n
         self.w2num_inhouse = Word2Num()
+        self.params = Params()
         pass
 
     def word_tokenize(self, input_sentence):
@@ -161,12 +161,6 @@ class Helper:
 
     def check_if_set_subset_in_options(self, options):
         option_list = [list(self.remove_stop_words(opt).values()) for opt in options]
-
-    @staticmethod
-    def convert_devanagari_to_IndicItrans(input):
-        new_data = [transliterate(data, sanscript.DEVANAGARI, sanscript.ITRANS) for data in input]
-        lowered_data = [data.lower() for data in new_data]
-        return lowered_data
 
 
 if __name__ == '__main__':

@@ -8,11 +8,11 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
 
-from nlpsim_utils.utilities import *
-from nlpsim_utils.helper import *
-from nlpsim_utils.nlp_logging import *
-from nlpsim_main.params import *
-from nlpsim_main.output_class import *
+from nlpsim.nlpsim_utils.utilities import *
+from nlpsim.nlpsim_utils.helper import *
+from nlpsim.nlpsim_utils.nlp_logging import *
+from nlpsim.nlpsim_main.params import *
+from nlpsim.nlpsim_main.output_class import *
 
 
 class Input:
@@ -32,10 +32,10 @@ class ProcessArgs:
     def __init__(self, logger, threshold=0.4):
         self.config = Params()
         self.utils = Utilities()
-        self.logger = logger
         self.helper = Helper()
         self.threshold = threshold
         self.output = Result()
+        self.logger = logger
         pass
 
     def parse_and_check_args(self, **kwargs):
@@ -50,11 +50,8 @@ class ProcessArgs:
         else:
             nlp_processed_args = processed_args
         self.log_inputs('NLP Processed ARgs: ', nlp_processed_args)
-        # Apply unilanguage translation. translate all fonts to english alphanumeric
-        uni_lang_args = self.convert_to_indic_alphanumeric(nlp_processed_args)
-        self.log_inputs('Indic ARgs:         ', uni_lang_args)
 
-        filtered_args = self.filter_common_words_from_options(uni_lang_args)
+        filtered_args = self.filter_common_words_from_options(nlp_processed_args)
         self.log_inputs('Filtered ARgs:      ', filtered_args)
 
         final_args = self.run_sanity_check(args=self.utils.clone(filtered_args))
@@ -108,16 +105,6 @@ class ProcessArgs:
         p_args.other_options = self.utils.get_list_from_str(args.other_options, get_list=True) \
             if args.other_options is not None else None
         return p_args
-
-    def convert_to_indic_alphanumeric(self, args):
-        alpha_args = self.utils.clone(args)
-        alpha_args.actual_answer = self.helper.convert_devanagari_to_IndicItrans([args.actual_answer])[0]
-        alpha_args.utterance_answer = self.helper.convert_devanagari_to_IndicItrans(args.utterance_answer)
-        alpha_args.correct_ans_variances = self.helper.convert_devanagari_to_IndicItrans(args.correct_ans_variances) \
-            if args.correct_ans_variances is not None else None
-        alpha_args.other_options = self.helper.convert_devanagari_to_IndicItrans(args.other_options) \
-            if args.other_options is not None else None
-        return alpha_args
 
     def filter_common_words_from_options(self, args):
         if args.other_options and self.utils.are_removal_common_words_required(

@@ -6,8 +6,8 @@ parentDirectory = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
-sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
-_sourcepath = os.path.abspath( Path(os.path.dirname(__file__)) / Path('.'))
+sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
+_sourcepath = os.path.abspath(Path(os.path.dirname(__file__)) / Path(''))
 
 import fileinput
 from nlpsim._version import __version__

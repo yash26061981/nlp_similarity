@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
 import flask
 from flask import request, jsonify, make_response, Flask
 
-from nlpsim_main.similarity import *
+from nlpsim.nlpsim_main.similarity import *
 import time
 
 app = Flask(__name__)
@@ -46,7 +46,8 @@ def similarity():
         ms = round((end - start) * 1000, 4)
         response = make_response(
             jsonify(
-                {"Correct_Ans": s1.replace('"', ''), "Entered_Ans": s2.replace('"', ''),
+                {"S1": s1.replace('"', ''), "S2": s2.replace('"', ''),
+                 "S3": s3.replace('"', ''), "S4": s4.replace('"', ''),
                  "Score": match.score, "Similarity": match.is_similar, "Time in millisec": ms,
                  "Method": match.match_method, "Match": match.match_word}), 200)
         response.headers["Content-Type"] = "application/json"
