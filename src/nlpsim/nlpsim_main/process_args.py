@@ -1,5 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ *************************************************************************
+ *
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED Confidential
+ * Copyright (c) 2020 AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains the property of
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to AUDIO FIRST COMMERCE
+ * PRIVATE LIMITED and its suppliers and may be covered by Indian and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law. Dissemination
+ * of this information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ *
+ *************************************************************************
+"""
+
 
 import os
 import sys
@@ -8,24 +26,10 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
 
-from nlpsim.nlpsim_utils.utilities import *
-from nlpsim.nlpsim_utils.helper import *
-from nlpsim.nlpsim_utils.nlp_logging import *
-from nlpsim.nlpsim_main.params import *
-from nlpsim.nlpsim_main.output_class import *
-
-
-class Input:
-    def __init__(self, actual_answer=None, utterance_answer=None,
-                 correct_ans_variances=None, other_options=None, threshold=0.0, method='None', quest_id=None):
-        self.actual_answer = actual_answer
-        self.utterance_answer = utterance_answer
-        self.correct_ans_variances = correct_ans_variances
-        self.other_options = other_options
-        self.threshold = threshold
-        self.method = method
-        self.quest_id = quest_id
-        pass
+from ..nlpsim_utils.utilities import *
+from ..nlpsim_utils.helper import *
+from ..nlpsim_main.params import *
+from ..nlpsim_main.input_class import *
 
 
 class ProcessArgs:
@@ -34,7 +38,6 @@ class ProcessArgs:
         self.utils = Utilities()
         self.helper = Helper()
         self.threshold = threshold
-        self.output = Result()
         self.logger = logger
         pass
 
@@ -87,9 +90,13 @@ class ProcessArgs:
             q_id = kwargs.get('q_id')
         else:
             q_id = None
+        if kwargs.get('agg_th') is not None:
+            agg_th = kwargs.get('agg_th')
+        else:
+            agg_th = False
 
         return Input(actual_answer=s1, utterance_answer=s2, correct_ans_variances=s3,
-                     other_options=s4, threshold=th, quest_id=q_id)
+                     other_options=s4, threshold=th, quest_id=q_id, aggresive_th=agg_th)
 
     def log_inputs(self, s, args):
         text = '{}::: S1- {}, S2- {}, S3- {}, S4- {}'.format(s, args.actual_answer, args.utterance_answer,
@@ -98,12 +105,17 @@ class ProcessArgs:
 
     def process_args(self, args):
         p_args = self.utils.clone(args)
-        p_args.actual_answer = self.utils.get_list_from_str(args.actual_answer, get_list=True)[0]
+        p_args.actual_answer = self.utils.get_list_from_str(args.actual_answer, get_list=False)
         p_args.utterance_answer = self.utils.get_list_from_str(args.utterance_answer, get_list=True)
         p_args.correct_ans_variances = self.utils.get_list_from_str(args.correct_ans_variances, get_list=True) \
             if args.correct_ans_variances is not None else None
         p_args.other_options = self.utils.get_list_from_str(args.other_options, get_list=True) \
             if args.other_options is not None else None
+
+        act_len = len(p_args.actual_answer.split(' '))
+        if act_len <= 3 and not p_args.aggresive_th:
+            p_args.aggresive_th = True
+            self.logger.log_info('Using Aggressive Thresholding')
         return p_args
 
     def filter_common_words_from_options(self, args):

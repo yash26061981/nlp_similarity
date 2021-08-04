@@ -1,13 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ *************************************************************************
+ *
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED Confidential
+ * Copyright (c) 2020 AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains the property of
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to AUDIO FIRST COMMERCE
+ * PRIVATE LIMITED and its suppliers and may be covered by Indian and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law. Dissemination
+ * of this information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ *
+ *************************************************************************
+"""
 
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
-from nlpsim.nlpsim_utils.word_to_num import *
-from nlpsim.nlpsim_main.params import *
+from ..nlpsim_utils.word_to_num import *
+from ..nlpsim_main.params import *
 import nltk
 import inflect
 import numpy as np

@@ -1,5 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ *************************************************************************
+ *
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED Confidential
+ * Copyright (c) 2020 AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains the property of
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to AUDIO FIRST COMMERCE
+ * PRIVATE LIMITED and its suppliers and may be covered by Indian and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law. Dissemination
+ * of this information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ *
+ *************************************************************************
+"""
+
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
@@ -7,59 +25,28 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__)) / Path("../..")))
 
-from nlpsim.nlpsim_methods.methods import *
-from nlpsim.nlpsim_utils.utilities import *
-from nlpsim.nlpsim_utils.helper import *
-from nlpsim.nlpsim_utils.nlp_logging import *
-from nlpsim.nlpsim_main.params import *
-from nlpsim.nlpsim_main.process_args import *
+from ..nlpsim_methods.methods import *
+from ..nlpsim_utils.utilities import *
+from ..nlpsim_utils.helper import *
+from ..nlpsim_utils.nlp_logging import *
+from ..nlpsim_main.params import *
+from ..nlpsim_main.process_args import *
+from ..nlpsim_main.output_class import *
+from ..nlpsim_main.input_class import *
 
 
 # nltk.download("stopwords")
 # nltk.download('punkt')
 
 
-class Result:
-    def __init__(self, match_score=0.0, match_method='None', is_similar=False,
-                 skip_match=False, match_word='None', processed=False, actual_answer='None', entered_ans=None,
-                 true_alternatives='None', other_options='None'):
-        self.score = match_score
-        self.match_method = match_method
-        self.is_similar = is_similar
-        self.skip_match = skip_match
-        self.match_word = match_word
-        self.processed = processed
-        self.actual_answer = actual_answer
-        if entered_ans is None:
-            self.entered_ans = []
-        else:
-            self.entered_ans = entered_ans
-        self.true_alternatives = true_alternatives
-        self.other_options = other_options
-        pass
-
-
-class Input:
-    def __init__(self, actual_answer=None, utterance_answer=None,
-                 correct_ans_variances=None, other_options=None, threshold=0.0, method='None'):
-        self.actual_answer = actual_answer
-        self.utterance_answer = utterance_answer
-        self.correct_ans_variances = correct_ans_variances
-        self.other_options = other_options
-        self.threshold = threshold
-        self.method = method
-        pass
-
-
 class GetSimilarity:
     def __init__(self, cwd=None, threshold=0.4):
+        self.logger = LogAppStd(cwd)
         self.config = Params()
         self.utils = Utilities()
-        self.methods = Methods(threshold, self.config)
         self.helper = Helper()
-        self.logger = LogAppStd(cwd)
+        self.methods = Methods(threshold, self.config, self.logger)
         self.argparse = ProcessArgs(self.logger, threshold)
-        self.output = Result()
         # self.rhyming = GetRhymingWords()
         self.threshold = threshold
         self.enable_rhyming = self.config.enable_rhyme
@@ -108,13 +95,13 @@ class GetSimilarity:
                           is_similar=is_similar, skip_match=skip_match)
 
         elif args.method == 'SynAnt':
-            check = self.methods.check_if_syn_ant_match(actual_answer, utterance_answer)
+            check = self.methods.check_if_syn_ant_match(args)
             if check and not self.config.reject_syn_ant_match:
                 check = False
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
         elif args.method == 'WordForm':
-            check = self.methods.check_if_word_forms_match(actual_answer, utterance_answer)
+            check = self.methods.check_if_word_forms_match(args)
             if check and not self.config.reject_word_forms:
                 check = False
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
@@ -127,7 +114,7 @@ class GetSimilarity:
 
         elif args.method == 'Partial':
             is_similar, ov_score, overlap_word = \
-                self.methods.match_using_string_overlap(actual_answer, utterance_answer, threshold)
+                self.methods.match_using_string_overlap(args)
             utt_ans_overlap = utterance_answer + ' -({})'.format(overlap_word)
             return Result(match_score=ov_score, match_method=args.method,
                           is_similar=is_similar, match_word=utt_ans_overlap)
@@ -140,7 +127,7 @@ class GetSimilarity:
 
         elif args.method == 'FuzzyMatch':
             is_similar, fm_score, fm_word = \
-                self.methods.match_using_fuzzy_logic(actual_answer, utterance_answer)
+                self.methods.match_using_fuzzy_logic(args)
             return Result(match_score=fm_score, match_method=args.method,
                           is_similar=is_similar, match_word=fm_word)
         else:
@@ -249,7 +236,7 @@ class GetSimilarity:
             raw_args, processed_args, filtered_args, final_args = self.argparse.parse_and_check_args(**kwargs)
             if raw_args.actual_answer is None or raw_args.utterance_answer is None:
                 self.logger.log_error('Correct Answer/ Utterances field can not be Blank or None')
-                return self.populate_payload(raw_args, self.output, got_exception=True)
+                return self.populate_payload(raw_args, Result(), got_exception=True)
             scores_list, word_list, method_list, similar_list = [], [], [], []
             utterance_answer = self.utils.clone(final_args.utterance_answer)
             try:

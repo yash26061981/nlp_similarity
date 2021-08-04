@@ -1,5 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ *************************************************************************
+ *
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED Confidential
+ * Copyright (c) 2020 AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains the property of
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to AUDIO FIRST COMMERCE
+ * PRIVATE LIMITED and its suppliers and may be covered by Indian and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law. Dissemination
+ * of this information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ *
+ *************************************************************************
+"""
 
 import os
 import sys
@@ -7,10 +24,9 @@ from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
 
-import flask
 from flask import request, jsonify, make_response, Flask
 
-from nlpsim.nlpsim_main.similarity import *
+from ..nlpsim_main.similarity import *
 import time
 
 app = Flask(__name__)
@@ -26,22 +42,28 @@ def initialise(cwd):
 
 
 def get_input_sentences():
-    s1, s2, s3, s4, q_id = 'None', 'None', 'None', 'None', 'None'
+    s1, s2, s3, s4, q_id, agg_th = 'None', 'None', 'None', 'None', 'None', 'False'
     if request.method == 'GET':
         s1 = request.args.get('s1', None)
         s2 = request.args.get('s2', None)
         s3 = request.args.get('s3', None)
         s4 = request.args.get('s4', None)
         q_id = request.args.get('q_id', None)
-    return s1, s2, s3, s4, q_id
+        agg_th = request.args.get('agg_th', 'False')
+        if agg_th.lower() == 'true':
+            agg_th = True
+        else:
+            agg_th = False
+
+    return s1, s2, s3, s4, q_id, agg_th
 
 
 @app.route('/similarity', methods=['GET', 'POST'])
 def similarity():
     try:
         start = time.time()
-        s1, s2, s3, s4, q_id = get_input_sentences()
-        match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4, q_id=q_id)
+        s1, s2, s3, s4, q_id, agg_th = get_input_sentences()
+        match = get_similarity.process(s1=s1, s2=s2, s3=s3, s4=s4, q_id=q_id, agg_th=agg_th)
         end = time.time()
         ms = round((end - start) * 1000, 4)
         response = make_response(

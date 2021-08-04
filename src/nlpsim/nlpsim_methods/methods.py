@@ -1,13 +1,31 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ *************************************************************************
+ *
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED Confidential
+ * Copyright (c) 2020 AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains the property of
+ * AUDIO FIRST COMMERCE PRIVATE LIMITED and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to AUDIO FIRST COMMERCE
+ * PRIVATE LIMITED and its suppliers and may be covered by Indian and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law. Dissemination
+ * of this information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from AUDIO FIRST COMMERCE PRIVATE LIMITED.
+ *
+ *************************************************************************
+"""
+
 import os
 import sys
 from pathlib import Path  # path tricks so we can import wherever the module is
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("..")))
 sys.path.append(os.path.abspath(Path(os.path.dirname(__file__))/Path("../..")))
-from nlpsim.nlpsim_methods.rhyming import *
-from nlpsim.nlpsim_utils.utilities import *
-from nlpsim.nlpsim_utils.helper import *
+from ..nlpsim_methods.rhyming import *
+from ..nlpsim_utils.utilities import *
+from ..nlpsim_utils.helper import *
 
 import re
 import difflib
@@ -20,11 +38,13 @@ class BaseMethods:
     def __init__(self):
         pass
 
-    def nth_root(self, value, n_root):
+    @staticmethod
+    def nth_root(value, n_root):
         root_value = 1 / float(n_root)
         return round(Decimal(value) ** Decimal(root_value), 3)
 
-    def square_rooted(self, x):
+    @staticmethod
+    def square_rooted(x):
         return round(math.sqrt(sum([a * a for a in x])), 3)
 
     def cosine_similarity(self, x, y):
@@ -32,19 +52,21 @@ class BaseMethods:
         denominator = self.square_rooted(x) * self.square_rooted(y)
         return round(numerator / float(denominator), 3) if denominator > 0 else 0.0
 
-    def jaccard_similarity(self, x, y):
+    @staticmethod
+    def jaccard_similarity(x, y):
         intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
         union_cardinality = len(set.union(*[set(x), set(y)]))
         return intersection_cardinality / float(union_cardinality)
 
 
 class Methods:
-    def __init__(self, threshold, config):
+    def __init__(self, threshold, config, logger):
         self.threshold = threshold
         self.rhyming_words = GetRhymingWords()
         self.difflib = difflib.SequenceMatcher
         self.utils = Utilities()
         self.helper = Helper()
+        self.logger = logger
         self.base = BaseMethods()
         self.config = config
         pass
@@ -164,7 +186,10 @@ class Methods:
             return False, min(word_match_score1, word_match_score2, word_match_score3), False
 
     #TODO
-    def match_using_string_overlap(self, a_ans, u_ans, threshold):
+    def match_using_string_overlap(self, args):
+        a_ans, u_ans, threshold = args.actual_answer, args.utterance_answer, args.threshold
+        use_aggresive_th = args.aggresive_th
+
         '''
         partial_match = self.difflib(None, a_ans, u_ans)
         a_cop, u_cop = a_ans, u_ans
@@ -192,9 +217,9 @@ class Methods:
         #print(a_ans, u_ans, difflib_score, difflib_score_rev)
         overlap_scores = self.get_score_overlap_wise(a_ans, ov_w)
         avg_ov_score = sum(overlap_scores)/len(overlap_scores)
-        #print([a_ans], [u_ans], [ov_w], overlap_scores, [avg_ov_score], [difflib_score], [difflib_score_rev])
+        # print([a_ans], [u_ans], [ov_w], overlap_scores, [avg_ov_score], [difflib_score], [difflib_score_rev])
         if difflib_score >= threshold:
-            if self.config.use_aggresive_partial_match:
+            if use_aggresive_th:  # self.config.use_aggresive_partial_match:
                 if self.config.avg_list_overlap_score <= avg_ov_score:
                     return True, difflib_score, ov_w
                 else:
@@ -211,8 +236,6 @@ class Methods:
         return score
 
     def match_using_rhyming_words(self, a_ans, u_ans, threshold, best_match=False):
-        score = 0.0
-        is_similar = False
         if self.rhyming_words.check_if_rhyming(a_ans, u_ans):
             return True, 1,0, u_ans
         else:
@@ -255,20 +278,23 @@ class Methods:
 
         return False, 0.0, None
 
-    def check_if_syn_ant_match(self, a_ans, u_ans):
+    def check_if_syn_ant_match(self, args):
+        a_ans, u_ans = args.actual_answer, args.utterance_answer
         a_syn, a_ant = self.helper.get_synonyms_antonyms(a_ans)
         u_syn, u_ant = self.helper.get_synonyms_antonyms(u_ans)
         if a_ans in u_ant or u_ans in a_ant:
             return True
         return False
 
-    def check_if_word_forms_match(self, a_ans, u_ans):
+    def check_if_word_forms_match(self, args):
+        a_ans, u_ans = args.actual_answer, args.utterance_answer
         u_ans_forms = self.helper.get_word_forms(u_ans)
         if a_ans in u_ans_forms:
             return True
         return False
 
-    def match_using_fuzzy_logic(self, a_ans, u_ans):
+    def match_using_fuzzy_logic(self, args):
+        a_ans, u_ans = args.actual_answer, args.utterance_answer
         if isinstance(u_ans, list):
             #ratios = process.extract(a_ans, u_ans)
             #print(ratios)
