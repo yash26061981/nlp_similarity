@@ -61,12 +61,18 @@ class GetSimilarity:
     def use_method(self, args):
         actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
         # self.nlpsim_methods.match_using_jaccard_similarity(actual_answer, utterance_answer, threshold)
+        # Check if other options answered. If other option answered,
+        # we are checking if that utterance has the correct answer or not.
+        # if that has the actual + oter options, we are removing other
+        # options from the utterances and keeping other sentences intact.
         if args.method == 'OtherOptionsAnswered':
             is_similar, other_option_match_score, matched_utterance = \
                 self.methods.check_if_other_options_answered(args)
             return Result(match_score=other_option_match_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
+        # Checking if utterances has any one-to-one
+        # match with the actual answer.
         if args.method == 'DirectMatch':
             is_similar, dm_score, matched_utterance = \
                 self.methods.is_direct_match(args)
