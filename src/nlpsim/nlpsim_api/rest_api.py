@@ -37,7 +37,7 @@ get_similarity = None
 
 def initialise(cwd):
     global get_similarity
-    get_similarity = GetSimilarity(cwd=cwd, threshold=0.4)
+    get_similarity = GetSimilarity(cwd=cwd, threshold=0.5)
     return
 
 

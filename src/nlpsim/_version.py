@@ -24,5 +24,5 @@ Provides nlpsim version information.
 
 # This file is auto-generated! Do not edit!
 
-__version__ = '2021.08.04.1'
+__version__ = '2021.08.13.2'
 __all__ = ["__version__"]

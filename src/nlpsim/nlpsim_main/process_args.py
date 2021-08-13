@@ -33,7 +33,7 @@ from ..nlpsim_main.input_class import *
 
 
 class ProcessArgs:
-    def __init__(self, logger, threshold=0.4):
+    def __init__(self, logger, threshold):
         self.config = Params()
         self.utils = Utilities()
         self.helper = Helper()
@@ -59,6 +59,10 @@ class ProcessArgs:
 
         final_args = self.run_sanity_check(args=self.utils.clone(filtered_args))
         self.log_inputs('Final ARgs:         ', final_args)
+
+        if self.config.filter_repeated_words and final_args.utterance_answer is not None:
+            self.filter_repeated_words_from_utterances(final_args)
+
         return raw_args, processed_args, filtered_args, final_args
 
     def parse_args(self, **kwargs):
@@ -160,3 +164,6 @@ class ProcessArgs:
         args.correct_ans_variances = self.utils.run_sanity_check(args.correct_ans_variances)
         args.other_options = self.utils.run_sanity_check(args.other_options)
         return args
+
+    def filter_repeated_words_from_utterances(self, args):
+        args.utterance_answer = self.utils.filter_repeated_words(args.utterance_answer)

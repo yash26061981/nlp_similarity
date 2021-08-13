@@ -19,6 +19,21 @@
 """
 
 
+class AlgAbstract:
+    def __init__(self):
+        self.use_Cosine = True
+        self.use_DirectMatch = True
+        self.use_NumWord = True
+        self.use_SynAnt = True
+        self.use_Partial = True
+        self.use_Rhyme = False
+        self.use_HybridMatch = True
+        self.use_WordForm = True
+        self.use_FuzzyMatch = True
+        self.use_OtherOptionsAnswered = True
+        pass
+
+
 class Params:
     def __init__(self):
         self.best_th = 0.8
@@ -34,4 +49,5 @@ class Params:
         self.reject_syn_ant_match = True
         self.reject_word_forms = False
         self.remove_stop_words = False
+        self.filter_repeated_words = True
         pass

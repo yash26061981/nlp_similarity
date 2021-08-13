@@ -159,6 +159,19 @@ class Utilities:
             return True
         return False
 
+    @staticmethod
+    def filter_repeated_words(utterances):
+        final_ut = []
+        for ut in utterances:
+            ut_splitted = ut.split(' ')
+            uniq_ut = np.unique(ut_splitted)
+            if len(uniq_ut) == 1:
+                final_ut.append(str(uniq_ut[0]))
+            else:
+                final_ut.append(ut)
+        return final_ut
+
+
 
 if __name__ == '__main__':
     utils = Utilities()

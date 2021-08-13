@@ -125,19 +125,33 @@ class Methods:
                 return False, 0.0, False
 
     def match_using_hybrid_num_letters(self, args):
+        is_similar, nw_score, skip_match = self.match_using_hybrid_num_letters_alternate_1(args)
+        if is_similar:
+            return is_similar, nw_score, skip_match
+
+        is_similar, nw_score, skip_match = self.match_using_hybrid_num_letters_alternate_2(args)
+        if is_similar:
+            return is_similar, nw_score, skip_match
+
+        is_similar, nw_score, skip_match = self.match_using_hybrid_num_letters_alternate_3(args)
+        if is_similar:
+            return is_similar, nw_score, skip_match
+        return False, 0.0, False
+
+    def match_using_hybrid_num_letters_alternate_1(self, args):
         actual_answer, utterance_answer = args.actual_answer, args.utterance_answer
         is_a_digit = self.utils.check_if_digit(actual_answer)
         is_u_digit = self.utils.check_if_digit(utterance_answer)
-        if is_a_digit and not is_u_digit: # example 20 and 20 Lacs
+        if is_a_digit and not is_u_digit:  # example 20 and 20 Lacs
             u_digits = re.findall('[0-9]+', utterance_answer)
             index = [i for i, j in enumerate(u_digits) if j == actual_answer]
             if index:
-                return True, 1.0, u_digits[index[0]], True
+                return True, 1.0, True
             else:
-                return False, 0.0, None, True
-        return False, 0.0, None, False
+                return False, 0.0, True
+        return False, 0.0, False
 
-    def match_using_hybrid_num_letters_alternate_1(self, args):
+    def match_using_hybrid_num_letters_alternate_2(self, args):
         actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
         a_val_list = actual_answer.split()
         u_val_list = utterance_answer.split()
@@ -169,7 +183,7 @@ class Methods:
                 return False, pass_score, False
         return False, 0.0, False
 
-    def match_using_hybrid_num_letters_alternate_2(self, args):
+    def match_using_hybrid_num_letters_alternate_3(self, args):
         actual_answer, utterance_answer, threshold = args.actual_answer, args.utterance_answer, args.threshold
         a_words = self.helper.get_all_forms_of_number_to_words_inhouse(actual_answer)
         u_words = self.helper.get_all_forms_of_number_to_words_inhouse(utterance_answer)

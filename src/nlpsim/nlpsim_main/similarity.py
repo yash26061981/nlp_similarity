@@ -43,17 +43,16 @@ class GetSimilarity:
     def __init__(self, cwd=None, threshold=0.4):
         self.logger = LogAppStd(cwd)
         self.config = Params()
+        self.alg_to_use = AlgAbstract()
         self.utils = Utilities()
         self.helper = Helper()
         self.methods = Methods(threshold, self.config, self.logger)
         self.argparse = ProcessArgs(self.logger, threshold)
         # self.rhyming = GetRhymingWords()
-        self.threshold = threshold
+        # self.threshold = threshold
         self.enable_rhyming = self.config.enable_rhyme
         self.get_best_match = self.config.get_best_match
         self.best_th = self.config.best_th
-        self.use_methods = ['DirectMatch', 'Cosine', 'NumWord', 'SynAnt', 'Partial', 'Rhyme', 'HybridMatch',
-                            'WordForm', 'FuzzyMatch', 'OtherOptionsAnswered']
         self.reject_match_methods = ['SynAnt', 'WordForm', 'OtherOptionsAnswered']
         self.logger.log_info('Loaded RunTime Parameters')
         pass
@@ -65,7 +64,7 @@ class GetSimilarity:
         # we are checking if that utterance has the correct answer or not.
         # if that has the actual + oter options, we are removing other
         # options from the utterances and keeping other sentences intact.
-        if args.method == 'OtherOptionsAnswered':
+        if args.method == 'OtherOptionsAnswered' and self.alg_to_use.use_OtherOptionsAnswered:
             is_similar, other_option_match_score, matched_utterance = \
                 self.methods.check_if_other_options_answered(args)
             return Result(match_score=other_option_match_score, match_method=args.method, is_similar=is_similar,
@@ -73,65 +72,54 @@ class GetSimilarity:
 
         # Checking if utterances has any one-to-one
         # match with the actual answer.
-        if args.method == 'DirectMatch':
+        if args.method == 'DirectMatch' and self.alg_to_use.use_DirectMatch:
             is_similar, dm_score, matched_utterance = \
                 self.methods.is_direct_match(args)
             return Result(match_score=dm_score, match_method=args.method, is_similar=is_similar,
                           match_word=matched_utterance)
 
-        elif args.method == 'NumWord':
+        elif args.method == 'NumWord' and self.alg_to_use.use_NumWord:
             is_similar, nw_score, skip_match = self.methods.match_using_numbers_and_words(args)
             return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
-        elif args.method == 'HybridMatch1':
-            is_similar, nw_score, match_word, skip_match = self.methods.match_using_hybrid_num_letters(args)
-            utt_ans_match = utterance_answer + ' -({})'.format(match_word)
-            return Result(match_score=nw_score, match_method=args.method, match_word=utt_ans_match,
+        elif args.method == 'HybridMatch' and self.alg_to_use.use_HybridMatch:
+            is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters(args)
+            return Result(match_score=nw_score, match_method=args.method, match_word=utterance_answer,
                           is_similar=is_similar, skip_match=skip_match)
 
-        elif args.method == 'HybridMatch2':
-            is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_1(args)
-            return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
-                          is_similar=is_similar, skip_match=skip_match)
-
-        elif args.method == 'HybridMatch3':
-            is_similar, nw_score, skip_match = self.methods.match_using_hybrid_num_letters_alternate_2(args)
-            return Result(match_score=nw_score, match_method=args.method, match_word=args.utterance_answer,
-                          is_similar=is_similar, skip_match=skip_match)
-
-        elif args.method == 'SynAnt':
+        elif args.method == 'SynAnt' and self.alg_to_use.use_SynAnt:
             check = self.methods.check_if_syn_ant_match(args)
             if check and not self.config.reject_syn_ant_match:
                 check = False
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
-        elif args.method == 'WordForm':
+        elif args.method == 'WordForm' and self.alg_to_use.use_WordForm:
             check = self.methods.check_if_word_forms_match(args)
             if check and not self.config.reject_word_forms:
                 check = False
             return Result(match_method=args.method, skip_match=check, match_word=args.utterance_answer)
 
-        elif args.method == 'Cosine':
+        elif args.method == 'Cosine' and self.alg_to_use.use_Cosine:
             is_similar, cosine_score = \
                 self.methods.match_using_cosine_similarity(actual_answer, utterance_answer, threshold)
             return Result(match_score=cosine_score, match_method=args.method, is_similar=is_similar,
                           match_word=utterance_answer)
 
-        elif args.method == 'Partial':
+        elif args.method == 'Partial' and self.alg_to_use.use_Partial:
             is_similar, ov_score, overlap_word = \
                 self.methods.match_using_string_overlap(args)
             utt_ans_overlap = utterance_answer + ' -({})'.format(overlap_word)
             return Result(match_score=ov_score, match_method=args.method,
                           is_similar=is_similar, match_word=utt_ans_overlap)
 
-        elif args.method == 'Rhyme':
+        elif args.method == 'Rhyme' and self.alg_to_use.use_Rhyme:
             is_similar, rh_score, rhyme_word = \
                 self.methods.match_using_rhyming_words(actual_answer, utterance_answer, threshold, best_match=False)
             return Result(match_score=rh_score, match_method=args.method,
                           is_similar=is_similar, match_word=rhyme_word)
 
-        elif args.method == 'FuzzyMatch':
+        elif args.method == 'FuzzyMatch' and self.alg_to_use.use_FuzzyMatch:
             is_similar, fm_score, fm_word = \
                 self.methods.match_using_fuzzy_logic(args)
             return Result(match_score=fm_score, match_method=args.method,
@@ -143,7 +131,7 @@ class GetSimilarity:
     def find_similarity(self, args):
         score, utt_ans, method = [], [], []
 
-        args.threshold = self.threshold
+        # args.threshold = self.threshold
         args.method = 'SynAnt'
         syn_ant_result = self.use_method(args)
         score.append(syn_ant_result.score), utt_ans.append(syn_ant_result.match_word)
@@ -159,30 +147,15 @@ class GetSimilarity:
         if num_word_result.is_similar or num_word_result.skip_match:
             return num_word_result
 
-        args.method = 'HybridMatch1'
+        args.method = 'HybridMatch'
+        args.threshold = self.config.hybrid_match_alternate_threshold
         hybrid_match_result = self.use_method(args)
         score.append(hybrid_match_result.score), utt_ans.append(hybrid_match_result.match_word)
         method.append(hybrid_match_result.match_method)
         if hybrid_match_result.is_similar or hybrid_match_result.skip_match:
             return hybrid_match_result
 
-        args.method = 'HybridMatch2'
-        args.threshold = self.config.hybrid_match_alternate_threshold
-        hybrid_match_alternate_result = self.use_method(args)
-        score.append(hybrid_match_alternate_result.score), utt_ans.append(hybrid_match_alternate_result.match_word)
-        method.append(hybrid_match_alternate_result.match_method)
-        if hybrid_match_alternate_result.is_similar or hybrid_match_alternate_result.skip_match:
-            return hybrid_match_alternate_result
-
-        args.method = 'HybridMatch3'
-        args.threshold = self.config.hybrid_match_alternate_threshold
-        hybrid_match_alternate_result = self.use_method(args)
-        score.append(hybrid_match_alternate_result.score), utt_ans.append(hybrid_match_alternate_result.match_word)
-        method.append(hybrid_match_alternate_result.match_method)
-        if hybrid_match_alternate_result.is_similar or hybrid_match_alternate_result.skip_match:
-            return hybrid_match_alternate_result
-
-        args.threshold = self.threshold
+        # args.threshold = self.threshold
         args.method = 'WordForm'
         word_form_result = self.use_method(args)
         score.append(word_form_result.score), utt_ans.append(word_form_result.match_word)
@@ -198,7 +171,7 @@ class GetSimilarity:
         if intersection_result.is_similar:
             return intersection_result
 
-        args.threshold = self.threshold
+        # args.threshold = self.threshold
         args.method = 'Cosine'
         cosine_result = self.use_method(args)
         score.append(cosine_result.score), utt_ans.append(cosine_result.match_word)
